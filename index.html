@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MVS_TASK_BOT - Mini App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Poppins', sans-serif; background-color: #f4f6f9; color: #333; }
+        .gradient-header { background: linear-gradient(135deg, #0f766e, #14b8a6); }
+        .card-shadow { box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); }
+    </style>
+</head>
+<body class="pb-20">
+
+    <!-- Top Header -->
+    <header class="gradient-header text-white p-4 flex justify-between items-center sticky top-0 z-40 shadow-md">
+        <div class="flex items-center space-x-3">
+            <button onclick="toggleDrawer()" class="text-xl focus:outline-none"><i class="fa-solid fa-bars"></i></button>
+            <span class="font-bold text-lg tracking-wide">MVS_TASK_BOT</span>
+        </div>
+        <div class="flex items-center space-x-3">
+            <div class="bg-teal-800 px-3 py-1.5 rounded-full flex items-center space-x-1.5 text-sm font-semibold">
+                <i class="fa-solid fa-wallet text-yellow-300"></i>
+                <span id="userBalance">৳ 0.00</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar Drawer Menu -->
+    <div id="drawerOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden" onclick="toggleDrawer()"></div>
+    <div id="sideDrawer" class="fixed top-0 left-0 w-72 h-full bg-white z-50 transform -translate-x-full transition-transform duration-300 overflow-y-auto shadow-2xl">
+        <div class="gradient-header p-5 text-white flex flex-col items-center">
+            <img id="drawerUserPhoto" src="https://via.placeholder.com/150" class="w-16 h-16 rounded-full border-2 border-white object-cover mb-2">
+            <h3 id="drawerUserName" class="font-bold text-base">Loading...</h3>
+            <p class="text-xs text-teal-200">ID: <span id="drawerUserId">--</span> • <span id="drawerStatus" class="text-yellow-300 font-semibold">Inactive</span></p>
+            <p id="drawerUserBio" class="text-[10px] text-teal-100 italic mt-1 text-center">Bio loading...</p>
+        </div>
+        <div class="p-4 space-y-3 text-sm text-gray-700">
+            <p class="text-xs font-bold text-gray-400 uppercase">Menu</p>
+            <a href="#" onclick="switchTab('home'); toggleDrawer();" class="flex items-center space-x-3 p-2 hover:bg-teal-50 rounded-lg text-teal-700 font-medium"><i class="fa-solid fa-house w-5"></i><span>Dashboard</span></a>
+            <a href="#" onclick="openService('tasks'); toggleDrawer();" class="flex items-center space-x-3 p-2 hover:bg-teal-50 rounded-lg"><i class="fa-solid fa-list-check w-5 text-indigo-500"></i><span>Task Manager</span></a>
+            <a href="#" onclick="openService('fbsell'); toggleDrawer();" class="flex items-center space-x-3 p-2 hover:bg-teal-50 rounded-lg"><i class="fa-brands fa-facebook w-5 text-blue-600"></i><span>Facebook Sell</span></a>
+            <a href="#" onclick="openService('gmailsell'); toggleDrawer();" class="flex items-center space-x-3 p-2 hover:bg-teal-50 rounded-lg"><i class="fa-solid fa-envelope w-5 text-red-500"></i><span>Gmail Sell</span></a>
+            <a href="#" onclick="openService('instasell'); toggleDrawer();" class="flex items-center space-x-3 p-2 hover:bg-teal-50 rounded-lg"><i class="fa-brands fa-instagram w-5 text-pink-600"></i><span>Instagram Sell</span></a>
+            <a href="#" onclick="openService('giftcode'); toggleDrawer();" class="flex items-center space-x-3 p-2 hover:bg-teal-50 rounded-lg"><i class="fa-solid fa-gift w-5 text-pink-500"></i><span>Gift Code</span></a>
+            <a href="#" onclick="openService('wallet'); toggleDrawer();" class="flex items-center space-x-3 p-2 hover:bg-teal-50 rounded-lg"><i class="fa-solid fa-wallet w-5 text-emerald-600"></i><span>Withdraw Funds</span></a>
+            <a href="#" onclick="switchTab('team'); toggleDrawer();" class="flex items-center space-x-3 p-2 hover:bg-teal-50 rounded-lg"><i class="fa-solid fa-users w-5 text-cyan-600"></i><span>My Team (Refer)</span></a>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <main class="p-4 max-w-md mx-auto space-y-4">
+
+        <!-- HOME TAB -->
+        <div id="tab-home" class="tab-content space-y-4">
+            <div id="alertBox" class="bg-gradient-to-r from-red-500 to-rose-600 text-white p-4 rounded-2xl shadow-lg text-center space-y-2">
+                <div class="text-2xl animate-bounce"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                <h3 class="font-bold text-lg">আপনার অ্যাকাউন্ট একটিভ নয়!</h3>
+                <p class="text-xs text-red-100">টেলিগ্রাম চ্যানেলে জয়েন করে অ্যাকাউন্ট একটিভ করুন।</p>
+                <button onclick="switchTab('verify')" class="bg-white text-red-600 px-5 py-2 rounded-xl font-bold text-sm shadow">Active Now</button>
+            </div>
+
+            <!-- Admin Notice -->
+            <div class="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-2.5 rounded-xl text-xs flex items-center space-x-2">
+                <span class="bg-blue-600 text-white px-2 py-0.5 rounded font-bold text-[10px]">Notice</span>
+                <p id="noticeText" class="truncate">MVS_TASK_BOT প্ল্যাটফর্মে আপনাকে স্বাগতম!</p>
+            </div>
+
+            <!-- Projects Grid -->
+            <div>
+                <h3 class="font-bold text-gray-700 text-sm mb-3"><i class="fa-solid fa-rocket text-teal-600 mr-1"></i> প্রজেক্ট সমূহ</h3>
+                <div class="grid grid-cols-3 gap-3 text-center">
+                    <div onclick="openService('fbsell')" class="bg-white p-3 rounded-2xl card-shadow flex flex-col items-center justify-center cursor-pointer hover:bg-teal-50">
+                        <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center text-lg mb-1"><i class="fa-brands fa-facebook-f"></i></div>
+                        <span class="text-[11px] font-medium text-gray-700">ফেসবুক সেল</span>
+                    </div>
+                    <div onclick="openService('gmailsell')" class="bg-white p-3 rounded-2xl card-shadow flex flex-col items-center justify-center cursor-pointer hover:bg-teal-50">
+                        <div class="w-10 h-10 bg-red-100 text-red-600 rounded-xl flex items-center justify-center text-lg mb-1"><i class="fa-solid fa-envelope"></i></div>
+                        <span class="text-[11px] font-medium text-gray-700">জিমেইল সেল</span>
+                    </div>
+                    <div onclick="openService('instasell')" class="bg-white p-3 rounded-2xl card-shadow flex flex-col items-center justify-center cursor-pointer hover:bg-teal-50">
+                        <div class="w-10 h-10 bg-pink-100 text-pink-600 rounded-xl flex items-center justify-center text-lg mb-1"><i class="fa-brands fa-instagram"></i></div>
+                        <span class="text-[11px] font-medium text-gray-700">ইনস্টাগ্রাম সেল</span>
+                    </div>
+                    <div onclick="openService('tasks')" class="bg-white p-3 rounded-2xl card-shadow flex flex-col items-center justify-center cursor-pointer hover:bg-teal-50">
+                        <div class="w-10 h-10 bg-cyan-100 text-cyan-600 rounded-xl flex items-center justify-center text-lg mb-1"><i class="fa-solid fa-list-check"></i></div>
+                        <span class="text-[11px] font-medium text-gray-700">টাস্ক জব</span>
+                    </div>
+                    <div onclick="openService('giftcode')" class="bg-white p-3 rounded-2xl card-shadow flex flex-col items-center justify-center cursor-pointer hover:bg-teal-50">
+                        <div class="w-10 h-10 bg-rose-100 text-rose-600 rounded-xl flex items-center justify-center text-lg mb-1"><i class="fa-solid fa-gift"></i></div>
+                        <span class="text-[11px] font-medium text-gray-700">গিফট কোড</span>
+                    </div>
+                    <div onclick="openService('wallet')" class="bg-white p-3 rounded-2xl card-shadow flex flex-col items-center justify-center cursor-pointer hover:bg-teal-50">
+                        <div class="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center text-lg mb-1"><i class="fa-solid fa-wallet"></i></div>
+                        <span class="text-[11px] font-medium text-gray-700">উইথড্র</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ACCOUNT VERIFICATION TAB -->
+        <div id="tab-verify" class="tab-content space-y-4 hidden">
+            <div class="bg-white p-6 rounded-2xl card-shadow text-center space-y-4">
+                <div class="w-16 h-16 bg-pink-100 text-pink-600 rounded-full flex items-center justify-center mx-auto text-2xl"><i class="fa-solid fa-shield-halved"></i></div>
+                <h2 class="text-xl font-bold text-gray-800">Channel Verification</h2>
+                <p class="text-xs text-gray-600">অ্যাকাউন্ট চালু করতে টেলিগ্রাম চ্যানেলে জয়েন করে ভেরিফাই করুন।</p>
+                <a href="https://t.me/mvs_task_bot0" target="_blank" class="block bg-blue-500 text-white py-2.5 rounded-xl font-bold text-xs">Join Telegram Channel ↗</a>
+                <button onclick="verifyTelegramJoin()" class="w-full bg-pink-600 text-white py-3 rounded-xl font-bold shadow">VERIFY NOW</button>
+            </div>
+        </div>
+
+        <!-- INSTAGRAM SELL TAB -->
+        <div id="tab-instasell" class="tab-content space-y-4 hidden">
+            <div class="bg-white p-5 rounded-2xl card-shadow space-y-3 text-xs">
+                <h3 class="font-bold text-sm text-gray-800 border-b pb-2 flex items-center"><i class="fa-brands fa-instagram text-pink-600 mr-2"></i> Instagram ID Sell</h3>
+                <input type="text" id="instaUser" placeholder="Username" class="w-full p-2.5 bg-gray-50 border rounded-xl">
+                <input type="password" id="instaPass" placeholder="Password" class="w-full p-2.5 bg-gray-50 border rounded-xl">
+                <input type="text" id="insta2fa" placeholder="2FA Key" class="w-full p-2.5 bg-gray-50 border rounded-xl">
+                <button onclick="submitSellData('Instagram')" class="w-full bg-pink-600 text-white py-3 rounded-xl font-bold shadow">SUBMIT INSTAGRAM ID</button>
+                <button onclick="switchTab('history')" class="w-full bg-gray-100 text-gray-700 py-2 rounded-xl font-bold">View History</button>
+            </div>
+        </div>
+
+        <!-- FACEBOOK SELL TAB -->
+        <div id="tab-fbsell" class="tab-content space-y-4 hidden">
+            <div class="bg-white p-5 rounded-2xl card-shadow space-y-3 text-xs">
+                <h3 class="font-bold text-sm text-gray-800 border-b pb-2 flex items-center"><i class="fa-brands fa-facebook text-blue-600 mr-2"></i> Facebook ID Sell</h3>
+                <input type="text" id="fbUid" placeholder="UID / Email" class="w-full p-2.5 bg-gray-50 border rounded-xl">
+                <input type="password" id="fbPass" placeholder="Password" class="w-full p-2.5 bg-gray-50 border rounded-xl">
+                <input type="text" id="fb2fa" placeholder="2FA Key" class="w-full p-2.5 bg-gray-50 border rounded-xl">
+                <button onclick="submitSellData('Facebook')" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold shadow">SUBMIT FACEBOOK ID</button>
+                <button onclick="switchTab('history')" class="w-full bg-gray-100 text-gray-700 py-2 rounded-xl font-bold">View History</button>
+            </div>
+        </div>
+
+        <!-- GMAIL SELL TAB -->
+        <div id="tab-gmailsell" class="tab-content space-y-4 hidden">
+            <div class="bg-white p-5 rounded-2xl card-shadow space-y-3 text-xs">
+                <h3 class="font-bold text-sm text-gray-800 border-b pb-2 flex items-center"><i class="fa-solid fa-envelope text-red-500 mr-2"></i> Gmail Account Sell</h3>
+                <input type="email" id="gmailAddr" placeholder="example@gmail.com" class="w-full p-2.5 bg-gray-50 border rounded-xl">
+                <input type="password" id="gmailPass" placeholder="Password" class="w-full p-2.5 bg-gray-50 border rounded-xl">
+                <button onclick="submitSellData('Gmail')" class="w-full bg-red-600 text-white py-3 rounded-xl font-bold shadow">SUBMIT GMAIL</button>
+                <button onclick="switchTab('history')" class="w-full bg-gray-100 text-gray-700 py-2 rounded-xl font-bold">View History</button>
+            </div>
+        </div>
+
+        <!-- TASKS TAB -->
+        <div id="tab-tasks" class="tab-content space-y-4 hidden">
+            <div class="bg-white p-4 rounded-2xl card-shadow space-y-3">
+                <h4 class="font-bold text-sm text-gray-800 border-b pb-2">Available Tasks</h4>
+                <div id="dynamicTasksList" class="space-y-3">
+                    <p class="text-xs text-gray-400 text-center py-2">কোনো টাস্ক নেই...</p>
+                </div>
+                <button onclick="switchTab('history')" class="w-full bg-gray-100 text-gray-700 py-2 rounded-xl font-bold text-xs mt-2">View Task History</button>
+            </div>
+        </div>
+
+        <!-- HISTORY TAB -->
+        <div id="tab-history" class="tab-content space-y-4 hidden">
+            <div class="bg-white p-5 rounded-2xl card-shadow space-y-3 text-xs">
+                <h3 class="font-bold text-sm text-gray-800 border-b pb-2">Activity & Submission History</h3>
+                <div id="userHistoryList" class="space-y-2">
+                    <p class="text-gray-400 text-center py-4">কোনো ইতিহাস পাওয়া যায়নি...</p>
+                </div>
+                <button onclick="switchTab('home')" class="w-full bg-gray-100 text-gray-700 py-2 rounded-xl font-bold">Back to Home</button>
+            </div>
+        </div>
+
+        <!-- GIFT CODE TAB -->
+        <div id="tab-giftcode" class="tab-content space-y-4 hidden">
+            <div class="bg-white p-5 rounded-2xl card-shadow text-center space-y-4">
+                <h3 class="font-bold text-gray-800">Gift Code Claim</h3>
+                <input type="text" id="giftCodeInput" placeholder="Enter Gift Code" class="w-full p-3 bg-gray-50 border rounded-xl text-center text-xs font-bold uppercase">
+                <button onclick="claimGiftCode()" class="w-full bg-pink-600 text-white py-3 rounded-xl font-bold shadow">CLAIM BONUS</button>
+                <button onclick="switchTab('home')" class="w-full bg-gray-100 text-gray-700 py-2 rounded-xl font-bold text-xs">Back</button>
+            </div>
+        </div>
+
+        <!-- WALLET TAB -->
+        <div id="tab-wallet" class="tab-content space-y-4 hidden">
+            <div class="bg-white p-5 rounded-2xl card-shadow space-y-4 text-xs">
+                <h3 class="font-bold text-sm text-gray-800 border-b pb-2">Withdraw Funds</h3>
+                <div class="bg-teal-50 p-4 rounded-xl text-center border">
+                    <span class="text-xs text-gray-500 block">AVAILABLE BALANCE</span>
+                    <span id="walletBal" class="text-2xl font-bold text-teal-700">৳ 0.00</span>
+                </div>
+                <input type="text" id="withdrawNumber" placeholder="Bkash/Nagad Number" class="w-full p-3 bg-gray-50 border rounded-xl">
+                <input type="number" id="withdrawAmount" placeholder="Amount (e.g. 50)" class="w-full p-3 bg-gray-50 border rounded-xl">
+                <button onclick="requestWithdraw()" class="w-full bg-teal-600 text-white py-3 rounded-xl font-bold shadow">CONFIRM WITHDRAW</button>
+                <button onclick="switchTab('home')" class="w-full bg-gray-100 text-gray-700 py-2 rounded-xl font-bold">Back</button>
+            </div>
+        </div>
+
+        <!-- TEAM TAB -->
+        <div id="tab-team" class="tab-content space-y-4 hidden">
+            <div class="bg-white p-5 rounded-2xl card-shadow space-y-4 text-center text-xs">
+                <h3 class="font-bold text-sm text-gray-800 border-b pb-2">Referral Program (৳10 Reward)</h3>
+                <p class="text-[11px] text-gray-500">আপনার লিংক থেকে কেউ জয়েন করে কমপক্ষে ১টি কাজ সম্পন্ন করলে আপনি পাবেন ১০ টাকা বোনাস!</p>
+                <input type="text" id="referLink" readonly class="w-full p-2.5 bg-gray-100 border rounded-xl text-center font-mono">
+                <button onclick="copyReferLink()" class="w-full bg-teal-600 text-white py-2 rounded-xl font-bold">Copy Refer Link</button>
+                <button onclick="switchTab('home')" class="w-full bg-gray-100 text-gray-700 py-2 rounded-xl font-bold">Back</button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Locked Feature Modal -->
+    <div id="lockedModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-72 rounded-3xl p-6 text-center space-y-4 shadow-2xl">
+            <div class="w-16 h-16 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mx-auto text-3xl"><i class="fa-solid fa-lock"></i></div>
+            <h3 class="font-bold text-lg text-gray-800">ফিচারটি বন্ধ আছে</h3>
+            <p class="text-xs text-gray-600">এডমিন প্যানেল থেকে এই ফিচারটি বর্তমানে লক করা আছে।</p>
+            <button onclick="closeLockedAlert()" class="w-full bg-teal-600 text-white py-2 rounded-xl font-bold text-xs">OK</button>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDxBvBB5LZBJx9SzRYFraFrk1JdqlH3a6c",
+            authDomain: "trx-zone-bd.firebaseapp.com",
+            databaseURL: "https://trx-zone-bd-default-rtdb.firebaseio.com",
+            projectId: "trx-zone-bd",
+            storageBucket: "trx-zone-bd.firebasestorage.app"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let tgUser = { id: 999999, first_name: "Demo User", bio: "No bio available", photo_url: "https://via.placeholder.com/150" };
+        if(window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe?.user) {
+            tgUser = window.Telegram.WebApp.initDataUnsafe.user;
+        }
+
+        document.getElementById('drawerUserName').innerText = tgUser.first_name;
+        document.getElementById('drawerUserId').innerText = tgUser.id;
+        document.getElementById('drawerUserBio').innerText = tgUser.bio || "MVS_TASK_BOT User";
+        if(tgUser.photo_url) document.getElementById('drawerUserPhoto').src = tgUser.photo_url;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const referrerId = urlParams.get('start');
+
+        const userRef = db.ref('users/' + tgUser.id);
+        userRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (!data) {
+                userRef.set({
+                    name: tgUser.first_name,
+                    balance: 0,
+                    status: 'Inactive',
+                    referredBy: referrerId || null,
+                    completedTaskCount: 0
+                });
+            } else {
+                document.getElementById('userBalance').innerText = '৳ ' + (data.balance || 0).toFixed(2);
+                document.getElementById('walletBal').innerText = '৳ ' + (data.balance || 0).toFixed(2);
+                document.getElementById('drawerStatus').innerText = data.status || 'Inactive';
+                if(data.status === 'Active') {
+                    document.getElementById('alertBox').classList.add('hidden');
+                } else {
+                    document.getElementById('alertBox').classList.remove('hidden');
+                }
+            }
+        });
+
+        document.getElementById('referLink').value = `https://t.me/mvs_task_bot0?start=${tgUser.id}`;
+
+        let locks = {};
+        db.ref('settings/locks').on('value', (snap) => { locks = snap.val() || {}; });
+        db.ref('settings/notice').on('value', (snap) => {
+            if(snap.exists()) document.getElementById('noticeText').innerText = snap.val();
+        });
+
+        function openService(serviceKey) {
+            if(locks[serviceKey] === false) {
+                document.getElementById('lockedModal').classList.remove('hidden');
+            } else {
+                switchTab(serviceKey);
+            }
+        }
+
+        function closeLockedAlert() { document.getElementById('lockedModal').classList.add('hidden'); }
+
+        async function verifyTelegramJoin() {
+            try {
+                let res = await fetch(`https://your-backend-url.com/api/verify-join?userId=${tgUser.id}`);
+                let result = await res.json();
+                if(result.success) {
+                    userRef.update({ status: 'Active' });
+                    alert('অভিনন্দন! আপনার অ্যাকাউন্ট সফলভাবে একটিভ হয়েছে।');
+                    switchTab('home');
+                } else {
+                    alert('আপনি এখনো টেলিগ্রাম চ্যানেলে জয়েন করেননি!');
+                }
+            } catch(e) {
+                userRef.update({ status: 'Active' });
+                alert('Account Activated (Test Mode)');
+                switchTab('home');
+            }
+        }
+
+        db.ref('tasks').on('value', (snapshot) => {
+            let container = document.getElementById('dynamicTasksList');
+            container.innerHTML = '';
+            if(!snapshot.exists()) {
+                container.innerHTML = '<p class="text-xs text-gray-400 text-center py-2">বর্তমানে কোনো টাস্ক নেই...</p>';
+                return;
+            }
+            snapshot.forEach((snap) => {
+                let task = snap.val();
+                let div = document.createElement('div');
+                div.className = "bg-gray-50 p-3 rounded-xl border space-y-2 text-xs";
+                div.innerHTML = `
+                    <div class="flex justify-between font-bold text-gray-800">
+                        <span>${task.title}</span>
+                        <span class="bg-teal-100 text-teal-800 px-2 py-0.5 rounded">৳${task.reward}</span>
+                    </div>
+                    <p class="text-gray-600">${task.desc || ''}</p>
+                    <a href="${task.link}" target="_blank" class="block text-center bg-teal-600 text-white py-1.5 rounded-lg font-bold">Open Link ↗</a>
+                    <label class="block text-[10px] text-gray-500 font-semibold pt-1">স্ক্রিনশট প্রুফ আপলোড করুন:</label>
+                    <input type="file" id="proofImg_${task.id}" class="text-[10px] w-full">
+                    <button onclick="submitTask('${task.id}', '${task.title}', ${task.reward})" class="w-full bg-emerald-600 text-white py-1.5 rounded-lg font-bold">Submit Proof (Pending)</button>
+                `;
+                container.appendChild(div);
+            });
+        });
+
+        function submitTask(taskId, taskTitle, reward) {
+            let fileInput = document.getElementById('proofImg_' + taskId);
+            let file = fileInput ? fileInput.files[0] : null;
+
+            if(file) {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    saveSubmission(taskId, taskTitle, reward, e.target.result);
+                }
+                reader.readAsDataURL(file);
+            } else {
+                saveSubmission(taskId, taskTitle, reward, null);
+            }
+        }
+
+        function saveSubmission(taskId, taskTitle, reward, imgBase64) {
+            db.ref('submissions/' + tgUser.id).push({
+                taskId: taskId,
+                taskTitle: taskTitle,
+                reward: reward,
+                img: imgBase64 || null,
+                status: 'Pending',
+                time: Date.now()
+            });
+            alert('টাস্ক প্রুফ সফলভাবে সাবমিট হয়েছে (Status: Pending)!');
+        }
+
+        function submitSellData(type) {
+            db.ref('submissions/' + tgUser.id).push({
+                type: type,
+                status: 'Pending',
+                time: Date.now()
+            });
+            alert(`${type} আইডি সাবমিট করা হয়েছে (Status: Pending)!`);
+        }
+
+        function requestWithdraw() {
+            let num = document.getElementById('withdrawNumber').value;
+            let amt = parseFloat(document.getElementById('withdrawAmount').value);
+            if(!num || !amt) return alert('নম্বর এবং টাকার পরিমাণ দিন!');
+            db.ref('withdraws/').push({ userId: tgUser.id, number: num, amount: amt, status: 'Pending', time: Date.now() });
+            alert('উইথড্র রিকোয়েস্ট পাঠানো হয়েছে (Status: Pending)!');
+        }
+
+        function claimGiftCode() {
+            let code = document.getElementById('giftCodeInput').value.trim();
+            if(!code) return alert('কোড লিখুন!');
+            db.ref('giftcodes/' + code).once('value', snapshot => {
+                if(snapshot.exists()) {
+                    let amount = snapshot.val().amount;
+                    userRef.once('value', uSnap => {
+                        let currentBal = uSnap.val().balance || 0;
+                        userRef.update({ balance: currentBal + amount });
+                        db.ref('giftcodes/' + code).remove();
+                        alert(`সফল! অ্যাকাউন্টে ৳${amount} যোগ হয়েছে।`);
+                    });
+                } else {
+                    alert('ভুল অথবা ব্যবহৃত গিফট কোড!');
+                }
+            });
+        }
+
+        // Load History Tab
+        db.ref('submissions').on('value', (snap) => {
+            let histContainer = document.getElementById('userHistoryList');
+            histContainer.innerHTML = '';
+            let hasData = false;
+
+            snap.forEach((userSnap) => {
+                if(userSnap.key == tgUser.id) {
+                    userSnap.forEach((subSnap) => {
+                        hasData = true;
+                        let d = subSnap.val();
+                        let div = document.createElement('div');
+                        div.className = "p-2.5 bg-gray-50 border rounded-xl flex justify-between items-center";
+                        div.innerHTML = `
+                            <div>
+                                <p class="font-bold text-gray-800">${d.taskTitle || d.type || 'Service'}</p>
+                                <span class="text-[10px] text-gray-400">${new Date(d.time).toLocaleString()}</span>
+                            </div>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${d.status === 'Approved' ? 'bg-green-100 text-green-700' : d.status === 'Rejected' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}">${d.status || 'Pending'}</span>
+                        `;
+                        histContainer.appendChild(div);
+                    });
+                }
+            });
+
+            if(!hasData) {
+                histContainer.innerHTML = '<p class="text-gray-400 text-center py-4">কোনো ইতিহাস পাওয়া যায়নি...</p>';
+            }
+        });
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+            window.scrollTo(0, 0);
+        }
+
+        function toggleDrawer() {
+            document.getElementById('sideDrawer').classList.toggle('-translate-x-full');
+            document.getElementById('drawerOverlay').classList.toggle('hidden');
+        }
+
+        function copyReferLink() {
+            let copyText = document.getElementById('referLink');
+            copyText.select();
+            navigator.clipboard.writeText(copyText.value);
+            alert('রেফার লিংক কপি করা হয়েছে!');
+        }
+    </script>
+</body>
+</html>
